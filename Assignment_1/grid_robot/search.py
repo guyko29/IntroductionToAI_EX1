@@ -1,28 +1,30 @@
 from search_node import search_node
 from grid_robot_state import grid_robot_state
+import heapq
+
 
 def create_open_set():
-    pass
+    return []
 
 
 def create_closed_set():
-    pass
+    return {}
 
 
 def add_to_open(vn, open_set):
-    pass
+    heapq.heappush(open_set, (vn.f, vn))
 
 
 def open_not_empty(open_set):
-    pass
+    return len(open_set) > 0
 
 
 def get_best(open_set):
-    pass
+    return heapq.heappop(open_set)[1]
 
 
 def add_to_closed(vn, closed_set):
-    pass
+    closed_set[vn.state] = vn
 
 #returns False if curr_neighbor state not in open_set or has a lower g from the node in open_set
 #remove the node with the higher g from open_set (if exists)
