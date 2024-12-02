@@ -1,9 +1,15 @@
 from grid_robot_state import grid_robot_state
 
+
 def base_heuristic(_grid_robot_state):
     robot_row, robot_col = _grid_robot_state.robot_location
     lamp_row, lamp_col = _grid_robot_state.lamp_location
-    return abs(robot_row - lamp_row) + abs(robot_col - lamp_col)
+    heuristic_value = abs(robot_row - lamp_row) + abs(robot_col - lamp_col)
+    print(f"base_heuristic: Robot = ({robot_row}, {robot_col}), "
+          f"Lamp = ({lamp_row}, {lamp_col}), "
+          f"Heuristic = {heuristic_value}")
+    return heuristic_value
+
 
 
 def advanced_heuristic(_grid_robot_state):
