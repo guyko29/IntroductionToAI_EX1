@@ -1,4 +1,4 @@
-
+### Given class, Dont change
 class search_node():
     def __init__(self, state, g=0, h=0, prev=None):
         self.state = state

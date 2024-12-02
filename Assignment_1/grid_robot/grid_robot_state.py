@@ -9,11 +9,14 @@ class grid_robot_state:
 
     @staticmethod
     def is_goal_state(state):
-        # The robot is at the lamp location, and the stairs at the lamp location equal the lamp height.
         if state.robot_location != state.lamp_location:
             return False
         row, col = state.lamp_location
-        return state.map[row][col] == state.lamp_height
+        # Check both carried and placed stairs
+        total_height = state.map[row][col]
+        if state.carrying and state.robot_location == state.lamp_location:
+            total_height += state.stairs_height
+        return total_height == state.lamp_height
 
     def get_neighbors(self):
         neighbors = []
@@ -78,11 +81,8 @@ class grid_robot_state:
                     stairs_height=new_stairs_height,
                     carrying=True
                 )
+                cost = 1
                 neighbors.append((neighbor, cost))
-                print(f"Neighbor added: Location = {neighbor.robot_location}, "
-                      f"Stairs Height = {neighbor.stairs_height}, "
-                      f"Carrying = {neighbor.carrying}")
-
         return neighbors
 
     """
@@ -164,24 +164,24 @@ class grid_robot_state:
         return hash((self.robot_location, self.lamp_location, self.carrying, self.stairs_height,
                      tuple(tuple(row) for row in self.map)))
     """
-    def __hash__(self):
-        """
-        Hash function for the state, needed for sets and dictionaries.
-        """
 
+    def __hash__(self):
         return hash((
             self.robot_location,
             self.stairs_height,
             self.lamp_location,
+            self.carrying,
             self.map[self.robot_location[0]][self.robot_location[1]]
-
         ))
 
     def __eq__(self, other):
         if not isinstance(other, grid_robot_state):
             return False
         return (
-            self.robot_location == other.robot_location
-            and self.lamp_location == other.lamp_location
-            and self.carrying == other.carrying
+                self.robot_location == other.robot_location and
+                self.lamp_location == other.lamp_location and
+                self.carrying == other.carrying and
+                self.stairs_height == other.stairs_height and
+                self.map[self.robot_location[0]][self.robot_location[1]] ==
+                other.map[other.robot_location[0]][other.robot_location[1]]
         )
