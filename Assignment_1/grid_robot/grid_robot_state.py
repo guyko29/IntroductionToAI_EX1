@@ -36,7 +36,7 @@ class grid_robot_state:
             return True
         return False
 
-
+#current
     def get_neighbors(self):
         neighbors = []
         directions = [(1, 0), (-1, 0), (0, -1), (0, 1)]
@@ -115,20 +115,11 @@ class grid_robot_state:
         return f"{self.robot_location}_{self.lamp_location}_{carrying_str}"
 
 
-    def __hash__(self):
-
-        return hash((self.robot_location, self.lamp_location, self.carrying, self.stairs_height,
-                     tuple(tuple(row) for row in self.map)))
 
 
     def __hash__(self):
-        return hash((
-            self.robot_location,
-            self.stairs_height,
-            self.lamp_location,
-            self.carrying,
-            self.map[self.robot_location[0]][self.robot_location[1]]
-        ))
+        return hash((self.robot_location,tuple(map(tuple,self.map)), self.lamp_height,self.lamp_location,self.stairs_height))
+
 
     def __eq__(self, other):
         if not isinstance(other, grid_robot_state):

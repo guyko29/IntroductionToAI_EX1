@@ -91,7 +91,6 @@ def search(start_state, heuristic):
                 path.append(current)
                 current = current.prev
             path.reverse()
-            print_path(path)
             return path
 
         add_to_closed(current, closed_set)

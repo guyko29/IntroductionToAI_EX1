@@ -5,12 +5,10 @@ def base_heuristic(_grid_robot_state):
     global actual_h_values
     h_value = abs(_grid_robot_state.robot_location[0] - _grid_robot_state.lamp_location[0]) + \
               abs(_grid_robot_state.robot_location[1] - _grid_robot_state.lamp_location[1])
-    print("Adding h_value:", h_value)  # Debug
     actual_h_values.append(h_value)
-    print("Current actual_h_values:", actual_h_values)  # Debug
     return h_value
 
-
+'''
 def advanced_heuristic(_grid_robot_state):
    robot_row, robot_col = _grid_robot_state.robot_location
    lamp_row, lamp_col = _grid_robot_state.lamp_location
@@ -28,3 +26,18 @@ def advanced_heuristic(_grid_robot_state):
    if stairs_needed > 0:
        return manhattan_distance + stairs_needed * 2  # Higher penalty for missing stairs
    return manhattan_distance
+'''
+def advanced_heuristic(_grid_robot_state):
+    """
+    Compute an advanced heuristic based on the robot's current state and remaining task.
+    Args:_grid_robot_state (grid_robot_state): The current state of the grid robot.
+    Returns:float: The advanced heuristic value based on distance and remaining height.
+    """
+    robot_x, robot_y = _grid_robot_state.robot_location
+    lamp_x, lamp_y = _grid_robot_state.lamp_location
+    lamp_height = _grid_robot_state.lamp_height
+    robot_stairs_height = _grid_robot_state.stairs_height
+    remaining_height = lamp_height - robot_stairs_height
+    if remaining_height == 0:
+        return lamp_height * (abs(robot_x - lamp_x) + abs(robot_y - lamp_y))
+    return ((remaining_height + lamp_height) / remaining_height) * (abs(robot_x - lamp_x) + abs(robot_y - lamp_y))

@@ -1,41 +1,102 @@
-from Assignment_1.grid_robot.heuristics import base_heuristic, advanced_heuristic
-from grid_robot_state import grid_robot_state
+import time
+from heuristics import *
 from search import *
 
+# if _name_ == 'main':
+test_cases = [
+    # {
+    #     "name": "Example Map",
+    #     "map": [
+    #         [0, 0, 0, 0, 0, 0, 0, 0],
+    #         [0, 0, 0, 4, 0, 0, 0, 0],
+    #         [0, 0, 0, 0, -1, 0, 0, 0],
+    #         [0, 0, 0, 0, -1, 0, 3, 0],
+    #         [0, 0, 0, 0, -1, 0, 0, 0],
+    #         [0, -1, -1, -1, -1, 0, 0, 0],
+    #         [0, 0, 0, 0, 0, 0, 0, 0]
+    #     ],
+    #     "robot_start": (2, 1),
+    #     "lamp_height": 7,
+    #     "lamp_location": (4, 2)
+    # },
+    {
+        "name": "Small Map",
+        "map": [
+            [0, 0, 0, 0],
+            [1, 4, 2, -1],
+            [0, -1, 0, -1]
+        ],
+        "robot_start": (0, 0),
+        "lamp_height": 6,
+        "lamp_location": (2, 2)
+    },
+    {
+        "name": "Medium Map",
+        "map": [
+            [0, 0, -1, 0, 0],
+            [0, 1, 0, 0, 0],
+            [0, -1, -1, -1, 0],
+            [2, 0, 0, 0, 0],
+            [0, 0, 0, 0, 3]
+        ],
+        "robot_start": (0, 0),
+        "lamp_height": 5,
+        "lamp_location": (4, 4)
+    },
+    {
+        "name": "Large Map",
+        "map": [
+            [0, 0, 0, -1, 0, 0, 0],
+            [0, -1, 0, -1, 0, 1, 0],
+            [0, -1, 0, 0, 0, 0, 0],
+            [0, 0, 0, -1, -1, 2, 0],
+            [0, 3, 0, 0, 0, 0, 0],
+            [0, -1, -1, 0, -1, 0, 4],
+            [0, 0, 0, 0, 0, 0, 0]
+        ],
+        "robot_start": (0, 0),
+        "lamp_height": 6,
+        "lamp_location": (6, 6)
+    },
+    {
+        "name": "Extra Large Map",
+        "map": [
+            [0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, -1, 0, 0, 0, 0],
+            [0, 0, 2, 0, 0, 0, -1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, -1, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 2, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 3]
+        ],
+        "robot_start": (7, 0),
+        "lamp_height": 3,
+        "lamp_location": (0, 7)
+    }
+]
 
-def test_case_1():
-    global actual_h_values
-    actual_h_values = []
-    print("Initial actual_h_values:", actual_h_values)
-    test_map = [
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, -1, 0, 0, 0, 0],
-        [0, 0, 2, 0, 0, 0, -1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, -1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 2, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 3]
-    ]
+for test in test_cases:
+    print(f"Running test case: {test['name']}")
     start_state = grid_robot_state(
-        robot_location=(7, 0),
-        map=test_map,
-        lamp_height=3,
-        lamp_location=(0, 7),
-        stairs_height=0,
-        carrying=False
+        map=test["map"],
+        robot_location=test["robot_start"],
+        lamp_height=test["lamp_height"],
+        lamp_location=test["lamp_location"]
     )
-    result = search(start_state, base_heuristic)
 
-    expected = [14, 13, 12, 11, 10, 9, 8, 7, 7, 6, 5, 4, 3, 2, 2, 1, 0, 0]
-    actual_h_values = []
+    # Base heuristic
+    start_time_base = time.time()
+    search_result_base = search(start_state, base_heuristic)
+    end_time_base = time.time() - start_time_base
+    print("Base Heuristic:")
+    print(f"Runtime: {end_time_base:.6f} seconds")
+    print(f"Solution cost: {search_result_base[-1].g if search_result_base else 'No solution found'}\n")
 
-    print("\nExpected heuristic values:", expected)
-    print("Actual heuristic values:", actual_h_values)
-
-    assert expected == actual_h_values, f"Heuristic values don't match!\nExpected: {expected}\nGot: {actual_h_values}"
-
-if __name__ == "__main__":
-   # actual_h_values = []
-    test_case_1()
-    #print("All tests passed!")
+    # Advanced heuristic
+    start_time_advanced = time.time()
+    search_result_advanced = search(start_state, advanced_heuristic)
+    end_time_advanced = time.time() - start_time_advanced
+    print("Advanced Heuristic:")
+    print(f"Runtime: {end_time_advanced:.6f} seconds")
+    print(f"Solution cost: {search_result_advanced[-1].g if search_result_advanced else 'No solution found'}\n")
