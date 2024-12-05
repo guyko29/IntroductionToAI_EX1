@@ -1,115 +1,96 @@
-import copy
+from search_node import search_node
+from grid_robot_state import grid_robot_state
+import heapq
 
 
-class grid_robot_state:
-    def __init__(self, robot_location, map=None, lamp_height=-1, lamp_location=(-1, -1), stairs_height=0,
-                 carrying=False):
-        self.robot_location = tuple(robot_location)
-        self.map = map
-        self.lamp_height = lamp_height
-        self.lamp_location = tuple(lamp_location)
-        self.stairs_height = stairs_height
-        self.carrying = carrying  # Indicates whether the robot is carrying stairs
+def create_open_set():
+    return {}, []
 
 
-    @staticmethod
-    def is_goal_state(state):
-        row, col = state.lamp_location
-        if (
-                state.robot_location == state.lamp_location
-                and state.map[row][col] == state.lamp_height
-                and not state.carrying
-        ):
-            return True
-        return False
+def create_closed_set():
+    return {}
 
 
-    def get_neighbors(self):
-        neighbors = []
-        directions = [(1, 0), (-1, 0), (0, -1), (0, 1)]
-        current_row, current_col = self.robot_location
-
-        # Move in four directions
-        for row_step, col_step in directions:
-            new_row = current_row + row_step
-            new_col = current_col + col_step
-            if 0 <= new_row < len(self.map) and 0 <= new_col < len(self.map[0]) and self.map[new_row][new_col] != -1:
-                cost = 1 + self.stairs_height
-                neighbor = grid_robot_state(
-                    robot_location=(new_row, new_col),
-                    map=self.map,
-                    lamp_height=self.lamp_height,
-                    lamp_location=self.lamp_location,
-                    stairs_height=self.stairs_height,
-                    carrying=self.carrying
-                )
-                neighbors.append((neighbor, cost))
-
-        # Pick up stairs
-        if not self.carrying and self.map[current_row][current_col] > 0:
-            new_map = copy.deepcopy(self.map)
-            new_map[current_row][current_col] = 0
-            neighbor = grid_robot_state(
-                robot_location=self.robot_location,
-                map=new_map,
-                lamp_height=self.lamp_height,
-                lamp_location=self.lamp_location,
-                stairs_height=self.map[current_row][current_col],
-                carrying=True
-            )
-            cost = 1
-            neighbors.append((neighbor, cost))
-
-        # Place stairs
-        if self.carrying and self.map[current_row][current_col] == 0:
-            new_map = copy.deepcopy(self.map)
-            new_map[current_row][current_col] = self.stairs_height
-            neighbor = grid_robot_state(
-                robot_location=self.robot_location,
-                map=new_map,
-                lamp_height=self.lamp_height,
-                lamp_location=self.lamp_location,
-                stairs_height=0,
-                carrying=False
-            )
-            cost = 1
-            neighbors.append((neighbor, cost))
-
-        # Combine stairs
-        if self.carrying and self.map[current_row][current_col] > 0:
-            new_stairs_height = self.stairs_height + self.map[current_row][current_col]
-            if new_stairs_height <= self.lamp_height:
-                new_map = copy.deepcopy(self.map)
-                new_map[current_row][current_col] = 0
-                neighbor = grid_robot_state(
-                    robot_location=self.robot_location,
-                    map=new_map,
-                    lamp_height=self.lamp_height,
-                    lamp_location=self.lamp_location,
-                    stairs_height=new_stairs_height,
-                    carrying=True
-                )
-                cost = 1
-                neighbors.append((neighbor, cost))
-        return neighbors
-
-    def get_state_str(self):
-        carrying_str = "carrying" if self.carrying else "not_carrying"
-        return f"{self.robot_location}_{self.lamp_location}_{carrying_str}"
+def add_to_open(vn, open_set):
+    heapq.heappush(open_set[1], (vn.f, vn))
+    key = vn.state
+    value = vn.g
+    open_set[0][key] = value
 
 
-    def __hash__(self):
-        return hash((self.robot_location,tuple(map(tuple,self.map)), self.lamp_height,self.lamp_location,self.stairs_height))
+def open_not_empty(open_set):
+    return len(open_set[1]) > 0
 
 
-    def __eq__(self, other):
-        if not isinstance(other, grid_robot_state):
+def get_best(open_set):
+    while open_set[1]:
+        out_state = heapq.heappop(open_set[1])[1]
+        if out_state.state in open_set[0]:
+            del open_set[0][out_state.state]
+            return out_state
+    return None
+
+
+def add_to_closed(vn, closed_set):
+   key = vn.state
+   closed_set[key] = vn
+
+
+def duplicate_in_closed(vn, closed_set):
+    if vn.state in closed_set:
+        if vn.g <= closed_set[vn.state].g:
+            del closed_set[vn.state]
             return False
-        return (
-                self.robot_location == other.robot_location and
-                self.lamp_location == other.lamp_location and
-                self.carrying == other.carrying and
-                self.stairs_height == other.stairs_height and
-                self.map[self.robot_location[0]][self.robot_location[1]] ==
-                other.map[other.robot_location[0]][other.robot_location[1]]
-        )
+        return True
+    return False
+
+
+def duplicate_in_open(vn, open_set):
+    if vn.state in open_set[0]:
+        if vn.g <= open_set[0][vn.state]:
+            del open_set[0][vn.state]
+            return False
+        return True
+    return False
+
+
+# helps to debug sometimes..
+def print_path(path):
+    for i in range(len(path)-1):
+        print(f"[{path[i].state.get_state_str()}]", end=", ")
+    print(path[-1].state.get_state_str)
+
+
+def search(start_state, heuristic):
+
+    open_set = create_open_set()
+    closed_set = create_closed_set()
+    start_node = search_node(start_state, 0, heuristic(start_state))
+    add_to_open(start_node, open_set)
+
+    while open_not_empty(open_set):
+
+        current = get_best(open_set)
+
+        if grid_robot_state.is_goal_state(current.state):
+            path = []
+            while current:
+                path.append(current)
+                current = current.prev
+            path.reverse()
+            return path
+
+        add_to_closed(current, closed_set)
+
+        for neighbor, edge_cost in current.get_neighbors():
+            curr_neighbor = search_node(neighbor, current.g + edge_cost, heuristic(neighbor), current)
+            if not duplicate_in_open(curr_neighbor, open_set) and not duplicate_in_closed(curr_neighbor, closed_set):
+                add_to_open(curr_neighbor, open_set)
+
+    return None
+
+
+
+
+
+
