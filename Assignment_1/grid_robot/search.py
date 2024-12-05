@@ -8,7 +8,7 @@ import heapq
 
 
 def create_open_set():
-    return []
+    return {}, []
 
 
 def create_closed_set():
@@ -16,47 +16,62 @@ def create_closed_set():
 
 
 def add_to_open(vn, open_set):
-    heapq.heappush(open_set, (vn.f, vn))
+    heapq.heappush(open_set[1], (vn.f, vn))
+    key = vn.state
+    value = vn.g
+    open_set[0][key] = value
 
 
 def open_not_empty(open_set):
-    return len(open_set) > 0
+    return len(open_set[1]) > 0
 
 
 def get_best(open_set):
-    return heapq.heappop(open_set)[1]
-
+    while open_set[1]:
+        out_state = heapq.heappop(open_set[1])[1]
+        if out_state.state in open_set[0]:
+            del open_set[0][out_state.state]
+            return out_state
+    return None
 
 def add_to_closed(vn, closed_set):
-   key = (vn.state.robot_location, vn.state.carrying, vn.state.stairs_height)
-   closed_set[key] = vn.g
-
+   key = vn.state
+   closed_set[key] = vn
 
 
 def duplicate_in_closed(vn, closed_set):
-    key = (vn.state.robot_location, vn.state.carrying, vn.state.stairs_height)
-    return key in closed_set and vn.g >= closed_set[key]
+    if vn.state in closed_set:
+        if vn.g <= closed_set[vn.state].g:
+            del closed_set[vn.state]
+            return False
+        return True
+    return False
 
 def duplicate_in_open(vn, open_set):
-    for _, node in open_set:
-        if (node.state.robot_location == vn.state.robot_location and
-            node.state.carrying == vn.state.carrying and
-            node.state.stairs_height == vn.state.stairs_height and
-            vn.g >= node.g):
-            return True
+    if vn.state in open_set[0]:
+        if vn.g <= open_set[0][vn.state]:
+            del open_set[0][vn.state]
+            return False
+        return True
     return False
+    # for _, node in open_set:
+    #     if (node.state.robot_location == vn.state.robot_location and
+    #             node.state.carrying == vn.state.carrying and
+    #             node.state.stairs_height == vn.state.stairs_height and
+    #             vn.g >= node.g):
+    #         return True
+    # return False
 
 # helps to debug sometimes..
 def print_path(path):
     for i in range(len(path)-1):
         print(f"[{path[i].state.get_state_str()}]", end=", ")
-    print(path[-1].state.state_str)
+    print(path[-1].state.get_state_str)
 import logging
 
-def log_print(message):
-    """פונקציה להדפסת הודעה גם לקונסול וגם לקובץ"""
-    print(message)  # מדפיס לקונסול
-    logging.info(message)  # כותב לקובץ
+# def log_print(message):
+#     print(message)
+#     logging.info(message)
 
 ### Given function, dont change
 def search(start_state, heuristic):
@@ -76,6 +91,7 @@ def search(start_state, heuristic):
                 path.append(current)
                 current = current.prev
             path.reverse()
+            print_path(path)
             return path
 
         add_to_closed(current, closed_set)
@@ -86,7 +102,6 @@ def search(start_state, heuristic):
                 add_to_open(curr_neighbor, open_set)
 
     return None
-
 
 
 
